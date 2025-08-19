@@ -308,6 +308,7 @@ On your special day, I just want you to know— Bhumi you are my forever wish co
 
       // ---------- typewriter logic (kept as-is but uses your new messages) ----------
       function type() {
+         if (messageIndex < messages.length) {
           const currentMessage = messages[messageIndex];
           if (charIndex < currentMessage.length) {
             typewriterElement.textContent += currentMessage.charAt(charIndex);
@@ -477,6 +478,7 @@ On your special day, I just want you to know— Bhumi you are my forever wish co
   </script>
 </body>
 </html>
+
 
 
 
