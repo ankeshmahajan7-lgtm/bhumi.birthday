@@ -237,7 +237,7 @@ On your special day, I just want you to know— Bhumi you are my forever wish co
       const confettiCount = 150;
       const confettiColors = ['#f44336','#e91e63','#9c27b0','#673ab7','#2196f3','#00bcd4','#4caf50','#ffeb3b','#ff9800','#ff5722'];
 
-      let messageIndex = 0, charIndex = 0, isTyping = true;
+      let messageIndex = 0, charIndex = 0, isTyping = false;
 
       // ---------- Loading -> show start screen + start balloons ----------
       setTimeout(() => {
@@ -308,7 +308,6 @@ On your special day, I just want you to know— Bhumi you are my forever wish co
 
       // ---------- typewriter logic (kept as-is but uses your new messages) ----------
       function type() {
-        if (messageIndex < messages.length) {
           const currentMessage = messages[messageIndex];
           if (charIndex < currentMessage.length) {
             typewriterElement.textContent += currentMessage.charAt(charIndex);
@@ -478,6 +477,7 @@ On your special day, I just want you to know— Bhumi you are my forever wish co
   </script>
 </body>
 </html>
+
 
 
 
