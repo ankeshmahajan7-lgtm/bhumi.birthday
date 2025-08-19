@@ -1,0 +1,480 @@
+<!DOCTYPE html> 
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>A Special Day for You ✨</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    /* ---------- base ---------- */
+    :root {
+      --bg-dark: #0d0d0d;
+      --accent: #ff4081;
+      --muted: #c0c0c0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html,body { height:100%; }
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: var(--bg-dark);
+      color: #fff;
+      overflow: hidden;
+    }
+
+    /* ---------- shared containers ---------- */
+    .loading-screen, .start-screen, .main-content, .video-container, .final-message-container {
+      position: fixed; top:0; left:0;
+      width:100%; height:100%;
+      display:flex; justify-content:center; align-items:center;
+      transition: opacity 0.9s ease;
+    }
+
+    /* ---------- loading ---------- */
+    .loading-screen { z-index: 20; flex-direction: column; background: var(--bg-dark); }
+    .loading-spinner {
+      border: 6px solid #333; border-top: 6px solid var(--accent);
+      border-radius: 50%; width:54px; height:54px; animation: spin 1s linear infinite;
+    }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    .loading-text { margin-top: 14px; font-size: 16px; color: var(--muted); }
+
+    /* ---------- START SCREEN (full-screen celebration) ---------- */
+    .start-screen {
+      display: none; flex-direction: column; opacity: 0; position: relative;
+      background: linear-gradient(135deg, #ff758c, #ff7eb3, #ff9a9e, #fad0c4);
+      background-size: 400% 400%; animation: gradient 12s ease infinite;
+      overflow: hidden; z-index: 10;
+    }
+    @keyframes gradient {
+      0% { background-position: 0% 50% } 50% { background-position: 100% 50% } 100% { background-position: 0% 50% }
+    }
+    .start-screen-title { font-size: 2rem; margin-bottom: 18px; text-shadow: 2px 2px 6px rgba(0,0,0,0.5); color: #fff; }
+    .start-button {
+      padding: 12px 28px; font-size: 1.05rem; border-radius: 28px;
+      border: none; background: var(--accent); color: white; cursor: pointer;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+    }
+    .note-text { margin-top: 10px; color: rgba(255,255,255,0.9); font-size: 0.95rem; }
+
+    /* Balloons */
+    .balloon {
+      position: absolute;
+      bottom: -160px;
+      width: 62px; height: 84px;
+      border-radius: 50%;
+      transform-origin: 50% 50%;
+      animation: floatUp linear infinite;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+    }
+    .balloon::after {
+      content: ""; position: absolute; left:50%; bottom:-18px; transform:translateX(-50%);
+      width:2px; height:20px; background: rgba(0,0,0,0.25);
+    }
+    @keyframes floatUp { 0%{ transform: translateY(0) rotate(0deg); opacity:1 } 100% { transform: translateY(-120vh) rotate(360deg); opacity:0 } }
+
+    /* Fireworks (small sparkles created on click) */
+    .firework {
+      position: absolute;
+      width:6px; height:6px; border-radius:50%;
+      pointer-events:none; z-index: 15;
+      box-shadow: 0 0 8px rgba(255,255,255,0.9);
+      animation: spark 900ms ease-out forwards;
+    }
+    @keyframes spark {
+      0% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(4); opacity: 0; }
+    }
+
+    /* ---------- MAIN CONTENT (typewriter + particles) ---------- */
+    .main-content { display:none; flex-direction: column; opacity:0; background: transparent; position: relative; z-index: 5; }
+    .message-box { min-height: 100px; max-width: 80vw; margin: 0 auto; padding: 12px; text-align: center; }
+    /* keep typewriter similar to your original but smaller & smoother */
+    .typewriter-text {
+      white-space: pre-wrap;
+      overflow: hidden;
+      border-right: 2px solid #64ffda; /* caret */
+      font-size: 1.05rem; /* smaller text size as requested */
+      line-height: 1.45;
+      max-width: 90vw;
+      display: inline-block;
+      text-align: center;
+      animation: blink-caret 0.75s step-end infinite;
+    }
+    @keyframes blink-caret { from,to{border-color:transparent} 50%{border-color:#64ffda} }
+
+    /* silent comet/particle background behind main content */
+    .particles {
+      position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 0;
+    }
+    .comet {
+      position: absolute; width: 3px; height: 3px; border-radius: 50%;
+      background: rgba(255,255,255,0.85); box-shadow: 0 0 8px rgba(255,255,255,0.6);
+      opacity: 0.9; transform: translate3d(0,0,0);
+      will-change: transform, opacity;
+    }
+
+    .cta-button {
+      margin-top: 28px; padding: 10px 24px; font-size: 1rem; border-radius: 24px;
+      border: none; background: #4caf50; color: #fff; cursor: pointer; opacity: 0;
+      transition: opacity 0.4s ease, transform 0.2s;
+    }
+    .cta-button.visible { opacity: 1; transform: translateY(0); }
+
+    /* ---------- VIDEO ---------- */
+    .video-container { display:none; justify-content:center; align-items:center; opacity:0; background:black; z-index: 30; }
+    .birthday-video { width: 100%; height: 100%; object-fit: contain; background: black; }
+
+    /* ---------- FINAL SCREEN (starry night & confetti) ---------- */
+    .final-message-container {
+      display:none; justify-content:center; align-items:center; opacity:0; position:relative; z-index: 40;
+      background: radial-gradient(circle at 50% 30%, rgba(19,28,53,0.9), #000 60%);
+      overflow: hidden;
+    }
+    /* star elements */
+    .star {
+      position: absolute; width:2px; height:2px; background:white; border-radius:50%;
+      opacity:0; transform: scale(0.8);
+      animation: twinkle 2.5s infinite ease-in-out;
+    }
+    @keyframes twinkle {
+      0% { opacity: 0; transform: scale(0.6); }
+      50% { opacity: 1; transform: scale(1.2); }
+      100% { opacity: 0; transform: scale(0.6); }
+    }
+
+    .final-message {
+      font-size: 3rem; font-weight: 700; color: #fff; text-align:center; z-index: 5;
+      text-shadow: 0 0 20px rgba(255,255,255,0.12);
+    }
+
+    .confetti-container { position:absolute; inset:0; pointer-events:none; overflow:hidden; z-index: 2; }
+    .confetti { position:absolute; width:10px; height:14px; border-radius:3px; opacity:0.95; }
+
+    /* responsive tweaks */
+    @media (max-width:600px) {
+      .typewriter-text { font-size: 0.95rem; }
+      .final-message { font-size: 2rem; padding: 0 12px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background Music (same id as your code) -->
+  <audio id="background-music" loop>
+    <source src="music.mp3" type="audio/mp3" />
+    Your browser does not support the audio element.
+  </audio>
+
+  <!-- Loading Screen -->
+  <div class="loading-screen">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Loading special memories...</div>
+  </div>
+
+  <!-- Start Screen (full screen) -->
+  <div class="start-screen" id="startScreen">
+    <h1 class="start-screen-title">Welcome!</h1>
+    <button id="startButton" class="start-button">Click to Begin</button>
+    <p class="note-text">Click the button to start the music and the message!</p>
+    <!-- balloons will be appended here -->
+  </div>
+
+  <!-- Main Content (typewriter + particles) -->
+  <div class="main-content">
+    <div class="particles" id="particles"></div>
+    <div class="message-box">
+      <div id="typewriter" class="typewriter-text"></div>
+    </div>
+    <button id="ctaButton" class="cta-button">Watch Video</button>
+  </div>
+
+  <!-- Video Section -->
+  <div class="video-container" id="videoContainer">
+    <video id="birthdayVideo" class="birthday-video" playsinline>
+      <source src="video.mp4" type="video/mp4" />
+      Your browser does not support the video tag.
+    </video>
+  </div>
+
+  <!-- Final message + starry background -->
+  <div class="final-message-container" id="finalContainer">
+    <div class="final-message">Happy Birthday! 🎉</div>
+    <div class="confetti-container" id="confettiContainer"></div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const loadingScreen = document.querySelector('.loading-screen');
+      const startScreen = document.getElementById('startScreen');
+      const mainContent = document.querySelector('.main-content');
+      const startButton = document.getElementById('startButton');
+      const typewriterElement = document.getElementById('typewriter');
+      const ctaButton = document.getElementById('ctaButton');
+      const videoContainer = document.getElementById('videoContainer');
+      const birthdayVideo = document.getElementById('birthdayVideo');
+      const finalContainer = document.getElementById('finalContainer');
+      const confettiContainer = document.getElementById('confettiContainer');
+      const confettiArea = document.getElementById('confettiContainer');
+      const particlesArea = document.getElementById('particles');
+      const music = document.getElementById('background-music');
+
+      // ---------- messages (REPLACED WITH USER MESSAGE) ----------
+      const messages = [
+`Hello, My Dearest Bhumi Maam ❤️ Today is a special day
+A day to celebrate all that you are
+I finally understand what true love really means— You’ve shown me feelings beyond ego, beyond selfishness. I was once a man driven by pride, not knowing what it meant to love selflessly… but you changed that.
+Even if life ever takes you far away from me, even if one day you stop loving me, my love for you will never fade.
+Today, tomorrow, and forever—I’ll keep loving you -endlessly.
+Because real love doesn’t always depend on being together… It lives quietly in the heart, untouched by time, undemanding, and eternal.
+On your special day, I just want you to know— You are my forever wish come true. 🌹✨`];
+
+      // keep typing speed and pause as before
+      const typingSpeed = 50;
+      const messagePause = 1500;
+      const confettiCount = 150;
+      const confettiColors = ['#f44336','#e91e63','#9c27b0','#673ab7','#2196f3','#00bcd4','#4caf50','#ffeb3b','#ff9800','#ff5722'];
+
+      let messageIndex = 0, charIndex = 0, isTyping = false;
+
+      // ---------- Loading -> show start screen + start balloons ----------
+      setTimeout(() => {
+        loadingScreen.classList.add('loaded');
+        setTimeout(() => {
+          loadingScreen.style.display = 'none';
+          startScreen.style.display = 'flex';
+          setTimeout(() => startScreen.style.opacity = '1', 50);
+          // start balloons interval (store id so we could clear later if needed)
+          window._balloonInterval = setInterval(createBalloon, 1200);
+        }, 900);
+      }, 1700);
+
+      // ---------- balloon generator (appends to startScreen) ----------
+      function createBalloon() {
+        const balloon = document.createElement('div');
+        balloon.classList.add('balloon');
+        // random horizontal position
+        balloon.style.left = (Math.random() * 90 + 2) + 'vw';
+        // color + subtle gradient
+        const h = Math.floor(Math.random()*360);
+        balloon.style.background = `linear-gradient(180deg, hsl(${h} 70% 70%), hsl(${h} 60% 45%))`;
+        balloon.style.animationDuration = (6 + Math.random()*6) + 's';
+        // random scale
+        const scale = 0.8 + Math.random()*0.8;
+        balloon.style.transform = `scale(${scale})`;
+        startScreen.appendChild(balloon);
+        // remove after it floats away
+        setTimeout(() => balloon.remove(), 11000);
+      }
+
+      // ---------- fireworks on start click ----------
+      function launchFireworks() {
+        for (let i=0; i<26; i++) {
+          const f = document.createElement('div');
+          f.classList.add('firework');
+          // random around center area
+          f.style.left = (window.innerWidth/2) + (Math.random()*600-300) + 'px';
+          f.style.top = (window.innerHeight/2) + (Math.random()*300-150) + 'px';
+          // color
+          const c = confettiColors[Math.floor(Math.random()*confettiColors.length)];
+          f.style.background = c;
+          document.body.appendChild(f);
+          setTimeout(()=> f.remove(), 900);
+        }
+      }
+
+      // ---------- start button logic (start music + show main content) ----------
+      startButton.addEventListener('click', () => {
+        launchFireworks();
+        // try to play music; browsers may require user gesture (this is user click)
+        music.play().catch(()=>console.log('music play prevented'));
+        // hide start screen -> show main content
+        startScreen.style.opacity = '0';
+        setTimeout(() => {
+          startScreen.style.display = 'none';
+          mainContent.style.display = 'flex';
+          // start subtle comet particles behind typewriter
+          startParticleComets();
+          setTimeout(() => {
+            mainContent.style.opacity = '1';
+            startTyping(); // start the exact typewriter you wanted
+          }, 120);
+        }, 900);
+        // stop creating new balloons after leaving start screen
+        clearInterval(window._balloonInterval);
+      });
+
+      // ---------- typewriter logic (kept as-is but uses your new messages) ----------
+      function type() {
+        if (messageIndex < messages.length) {
+          const currentMessage = messages[messageIndex];
+          if (charIndex < currentMessage.length) {
+            typewriterElement.textContent += currentMessage.charAt(charIndex);
+            charIndex++;
+            setTimeout(type, typingSpeed);
+          } else {
+            typewriterElement.textContent += '\n\n';
+            messageIndex++;
+            charIndex = 0;
+            setTimeout(type, messagePause);
+          }
+        } else {
+          showCtaButton();
+        }
+      }
+      function startTyping() {
+        if (!isTyping) {
+          isTyping = true;
+          type();
+        }
+      }
+      function showCtaButton() {
+        ctaButton.classList.add('visible');
+      }
+
+      // ---------- comet / particle background for main content ----------
+      // creates a comet moving from top-left to bottom-right with tail effect
+      let _cometInterval = null;
+      function startParticleComets() {
+        _cometInterval = setInterval(() => {
+          const comet = document.createElement('div');
+          comet.classList.add('comet');
+          // start offscreen left, random upper region
+          const startY = Math.random() * 60 + 10; // percent
+          comet.style.left = '-6vw';
+          comet.style.top = startY + 'vh';
+          const length = 1200 + Math.random()*800;
+          comet.style.width = '3px';
+          comet.style.height = '3px';
+          // animate via JS (imperative) - smoother than CSS for random paths
+          const speed = 2200 + Math.random()*1800;
+          const dx = window.innerWidth + 200;
+          const dy = (Math.random()*200 - 50);
+          comet.animate([
+            { transform: `translate(0,0)`, opacity: 1 },
+            { transform: `translate(${dx}px, ${dy}px)`, opacity: 0 }
+          ], {
+            duration: speed,
+            easing: 'cubic-bezier(.2,.8,.2,1)'
+          });
+          particlesArea.appendChild(comet);
+          setTimeout(()=> comet.remove(), speed + 50);
+        }, 700);
+      }
+      function stopParticleComets() {
+        clearInterval(_cometInterval);
+      }
+
+      // ---------- VIDEO PLAY (pause music) ----------
+      ctaButton.addEventListener('click', () => {
+        // hide main content
+        mainContent.style.opacity = '0';
+        setTimeout(() => {
+          mainContent.style.display = 'none';
+          videoContainer.style.display = 'flex';
+          setTimeout(() => {
+            videoContainer.style.opacity = '1';
+            // request fullscreen
+            if (birthdayVideo.requestFullscreen) {
+              birthdayVideo.requestFullscreen();
+            } else if (birthdayVideo.webkitRequestFullscreen) {
+              birthdayVideo.webkitRequestFullscreen();
+            } else if (birthdayVideo.msRequestFullscreen) {
+              birthdayVideo.msRequestFullscreen();
+            }
+            // pause background music
+            try { music.pause(); } catch(e) {}
+            // stop particle comets to save resources
+            stopParticleComets();
+            // play video
+            birthdayVideo.play().catch(e => console.error("Video play failed:", e));
+          }, 80);
+        }, 1000);
+      });
+
+      // ---------- after video ends: resume music + show final with starry night ---------- 
+      birthdayVideo.addEventListener('ended', () => {
+        // exit fullscreen if needed
+        if (document.fullscreenElement) {
+          document.exitFullscreen().catch(()=>{});
+        }
+        // hide video container
+        videoContainer.style.opacity = '0';
+        setTimeout(() => {
+          videoContainer.style.display = 'none';
+          // show final container with stars
+          finalContainer.style.display = 'flex';
+          setTimeout(() => {
+            finalContainer.style.opacity = '1';
+            // resume music
+            music.play().catch(()=>console.log('resume prevented'));
+            // create confetti and starry background
+            createConfettiBurst();
+            createStarField(80); // create stars
+          }, 120);
+        }, 800);
+      });
+
+      // ---------- confetti after video ---------- 
+      function createConfettiBurst() {
+        for (let i = 0; i < confettiCount; i++) {
+          const piece = document.createElement('div');
+          piece.classList.add('confetti');
+          piece.style.background = confettiColors[Math.floor(Math.random() * confettiColors.length)];
+          // random start position near top center
+          piece.style.left = (40 + Math.random()*20) + 'vw';
+          piece.style.top = (5 + Math.random()*10) + 'vh';
+          // animation properties via CSS variables used earlier in previous code idea
+          const x = (Math.random() - 0.5) * 1400 + 'px';
+          const y = (Math.random() * 900) + 600 + 'px';
+          const r = Math.random() * 720 + 'deg';
+          const s = Math.random() * 0.8 + 0.6;
+          const dur = (3 + Math.random()*2) + 's';
+          piece.style.setProperty('--x', x);
+          piece.style.setProperty('--y', y);
+          piece.style.setProperty('--r', r);
+          piece.style.setProperty('--s', s);
+          piece.style.animation = `confettiFall ${dur} linear forwards`;
+          // add small custom animation keyframes in JS (since we don't have a CSS keyframe named confettiFall)
+          piece.animate([
+            { transform: 'translate(0,0) rotate(0deg) scale(1)', opacity: 1 },
+            { transform: `translate(${x}) rotate(${r}) scale(${s})`, opacity: 0 }
+          ], { duration: (parseFloat(dur) * 1000), easing: 'ease-in' });
+          confettiArea.appendChild(piece);
+          // remove after done
+          setTimeout(()=> piece.remove(), (parseFloat(dur) * 1000) + 200);
+        }
+      }
+
+      // ---------- starry background for final screen ----------
+      function createStarField(count) {
+        for (let i=0;i<count;i++) {
+          const star = document.createElement('div');
+          star.classList.add('star');
+          // random positions across screen
+          star.style.left = Math.random()*100 + 'vw';
+          star.style.top = Math.random()*90 + 'vh';
+          // different twinkle durations & delays
+          const dur = 1500 + Math.random()*2300;
+          star.style.animationDuration = (dur/1000) + 's';
+          star.style.animationDelay = (Math.random()*1.5) + 's';
+          finalContainer.appendChild(star);
+          // remove stars after some time so DOM doesn't explode if user replays
+          setTimeout(()=> star.remove(), 20000 + Math.random()*10000);
+        }
+      }
+
+      // ---------- small housekeeping: keep typewriter whitespace & caret behavior as before ----------
+      // (All handled by the CSS/JS above — startTyping() is unchanged)
+
+      // ---------- cleanup if user navigates away (optional) ----------
+      window.addEventListener('beforeunload', () => {
+        clearInterval(window._balloonInterval);
+        clearInterval(_cometInterval);
+      });
+    });
+  </script>
+</body>
+</html>
